@@ -1,14 +1,15 @@
-import { Column, Resource, Type } from "../decorator/resource";
+import { Column, List, Resource, Type } from "../decorator/resource";
 
 @Resource
 export class WeaponComponent {
 
-    public readonly source: string
+    public readonly source: string;
 
-    public readonly name: string
+    public readonly name: string;
 
     @Type("float")
-    public readonly damage: number
+    @List("-")
+    public readonly damage: number[];
 
     @Type("int")
     @Column("force on hit")
@@ -21,7 +22,7 @@ export class WeaponComponent {
     public readonly dps: number;
 
 
-    constructor(source: string, name: string, damage: number, forceOnHit: number, radius: number, dps: number) {
+    constructor(source: string, name: string, damage: number[], forceOnHit: number, radius: number, dps: number) {
         this.source = source;
         this.name = name;
         this.damage = damage;

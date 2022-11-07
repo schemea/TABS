@@ -2,6 +2,20 @@ import "reflect-metadata";
 import { Constructor } from "../types";
 import { addDecoratorMetadata, hasDecorator } from "./utils";
 
+function parseValue(type: string, value: string): any {
+    switch (type) {
+        case "float":
+            return parseFloat(value.replace(",", ""));
+        case "int":
+            return parseInt(value.replace(",", ""));
+        case "list":
+            return value.split;
+        case "string":
+        default:
+            return value;
+    }
+}
+
 export function Resource<T>(clazz: Constructor<T>) {
     addDecoratorMetadata(clazz, Resource);
     Object.assign(clazz, {
@@ -11,16 +25,17 @@ export function Resource<T>(clazz: Constructor<T>) {
 
             for (let [ key, value ] of Object.entries(map)) {
                 if (mappings[key]) key = mappings[key];
-                switch (Reflect.getMetadata("resource:type", object, key)) {
-                    case "float":
-                        value = parseFloat(value.replace(",", ""));
-                        break;
-                    case "int":
-                        value = parseInt(value.replace(",", ""));
-                        break;
-                    case "string":
-                    default:
-                        break;
+                const delimiter = Reflect.getMetadata("resource:delimiter", object, key);
+                const type = Reflect.getMetadata("resource:type", object, key);
+
+                if (value) {
+                    if (delimiter) {
+                        value = (value as string).split(delimiter)
+                            .map(element => element.trim())
+                            .map(element => parseValue(type, element));
+                    } else {
+                        value = parseValue(type, value);
+                    }
                 }
 
                 object[key] = value;
@@ -31,8 +46,12 @@ export function Resource<T>(clazz: Constructor<T>) {
     });
 }
 
-export function Type(type: "int" | "float" | "string") {
+export function Type<T>(type: "int" | "float" | "string") {
     return Reflect.metadata("resource:type", type);
+}
+
+export function List<T>(delimiter: string) {
+    return Reflect.metadata("resource:delimiter", delimiter);
 }
 
 export function Column(value: string) {

@@ -32,7 +32,7 @@ function renderEffect(effect: Effect, id: string) {
 
 }
 
-function getSuffix<K extends keyof Weapon>(key: K) {
+function getSuffix<K extends keyof Weapon>(key: K): string {
     switch (key) {
         case "cooldown":
         case "shootDelay":
@@ -44,7 +44,7 @@ function getSuffix<K extends keyof Weapon>(key: K) {
         case "range":
             return " WM";
         default:
-            return null;
+            return "";
     }
 }
 
@@ -63,6 +63,15 @@ function getLabel<K extends (keyof Weapon | keyof WeaponComponent)>(key: K) {
     }
 }
 
+function formatValue<K extends keyof Weapon>(key: K, value: any): string {
+    switch (key) {
+        case "damage":
+            return value ? value.join(" - ") + getSuffix(key) : "";
+        default:
+            return value + getSuffix(key);
+    }
+}
+
 export function WeaponView({ weapon }: Props) {
     const data = useDataContext();
 
@@ -72,14 +81,13 @@ export function WeaponView({ weapon }: Props) {
     const components = data.weaponComponents.findBy("source", weapon.name);
 
     function stat<K extends keyof Weapon>(key: K) {
-        const suffix = getSuffix(key);
         const value = weapon[key];
         const componentValues = components
             .filter(component => !!component[key as keyof WeaponComponent])
             .map(component => (
                 <Fragment>
                     <div>{ component.name }</div>
-                    <div>{ component[key as keyof WeaponComponent] }{ suffix }</div>
+                    <div>{ formatValue(key, component[key as keyof WeaponComponent]) }</div>
                 </Fragment>
             ));
 
@@ -88,7 +96,7 @@ export function WeaponView({ weapon }: Props) {
                 componentValues.unshift(
                     <Fragment>
                         <div>weapon</div>
-                        <div>{ value }{ suffix }</div>
+                        <div>{ formatValue(key, value) }</div>
                     </Fragment>,
                 );
             }
@@ -110,7 +118,7 @@ export function WeaponView({ weapon }: Props) {
         return (
             <tr key={ key }>
                 <td>{ getLabel(key) }</td>
-                <td>{ value }{ suffix }</td>
+                <td>{ formatValue(key, value) }</td>
             </tr>
         );
     }

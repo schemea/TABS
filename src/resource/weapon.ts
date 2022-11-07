@@ -1,4 +1,4 @@
-import { Column, Resource, Type } from "../decorator/resource";
+import { Column, List, Resource, Type } from "../decorator/resource";
 
 export enum WeaponType {
     Melee,
@@ -10,7 +10,7 @@ export class Weapon {
 
     public readonly type: WeaponType;
 
-    public readonly projectile: string
+    public readonly projectile: string;
 
     @Type("float")
     public readonly range: number;
@@ -23,7 +23,8 @@ export class Weapon {
     public readonly shootDelay: number;
 
     @Type("float")
-    public readonly damage: number;
+    @List("-")
+    public readonly damage: [ number, number ] | [ number ];
 
     @Type("float")
     public readonly dps: number;
@@ -32,7 +33,8 @@ export class Weapon {
     @Column("force on hit")
     public readonly forceOnHit: number;
 
-    constructor(name: string, type: WeaponType, projectile: string, range: number, cooldown: number, shootDelay: number, damage: number, dps: number, knockback: number) {
+
+    constructor(name: string, type: WeaponType, projectile: string, range: number, cooldown: number, shootDelay: number, damage: [ number, number ] | [ number ], dps: number, forceOnHit: number) {
         this.name = name;
         this.type = type;
         this.projectile = projectile;
@@ -41,6 +43,6 @@ export class Weapon {
         this.shootDelay = shootDelay;
         this.damage = damage;
         this.dps = dps;
-        this.forceOnHit = knockback;
+        this.forceOnHit = forceOnHit;
     }
 }
