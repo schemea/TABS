@@ -1,5 +1,4 @@
 import { resolveEndpoint } from "./utils";
-import path from "path";
 import { Constructor } from "../types";
 
 const PLACEHOLDERS = {
@@ -44,7 +43,7 @@ export class SheetClient {
     }
 
     endpoint<K extends keyof Endpoints>(key: K) {
-        return `${ path.join(this.base, this.endpoints[key]) }?key=${ this.apiKey }`;
+        return `${ this.base }/${ this.endpoints[key] }?key=${ this.apiKey }`;
     }
 
     spreadsheet(id: string) {
