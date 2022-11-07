@@ -2,6 +2,11 @@ import "./unit.scss";
 import React, { Dispatch, Fragment, useEffect, useMemo, useReducer, useState } from "react";
 import { Unit } from "../resource/unit";
 import { DataContext, useDataContext } from "../context/data";
+import { Weapon } from "../resource/weapon";
+import { WeaponView } from "./weapon";
+import { usePreviousFallback } from "../hook/fallback";
+import { useTimer } from "../hook/timer";
+import naturalCompare from "string-natural-compare";
 import {
     Chip,
     createTheme,
@@ -15,12 +20,8 @@ import {
     TableRow,
     ThemeProvider,
     Tooltip,
-} from "@material-ui/core";
-import { Weapon } from "../resource/weapon";
-import { WeaponView } from "./weapon";
-import { usePreviousFallback } from "../hook/fallback";
-import { useTimer } from "../hook/timer";
-import naturalCompare from "string-natural-compare";
+} from "@mui/material";
+import { SortEditor } from "./sort-editor";
 
 
 interface State {
@@ -47,9 +48,26 @@ interface WeaponAction {
 
 type Action = ColumnsAction | WeaponAction
 
-function compare(...units: [ Unit, Unit ]) {
-    const [ a, b ] = units.map(value => value.faction + value.cost);
-    return naturalCompare(a, b);
+function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
+    switch (key) {
+        default:
+            if (a[key] === undefined || a[key] === null) return -1;
+            if (b[key] === undefined || b[key] === null) return 1;
+            return naturalCompare(a[key].toString(), b[key].toString());
+    }
+}
+
+function createComparer(order: (keyof Unit)[]) {
+    return function (...units: [ Unit, Unit ]): number {
+        for (const key of order) {
+            const result = compare(key, ...units);
+            if (result !== 0) {
+                return result;
+            }
+        }
+
+        return 0;
+    };
 }
 
 enum Columns {
@@ -78,12 +96,12 @@ const Headers: Record<Columns, string> = {
 const chipTheme = createTheme({
     palette: {
         primary: {
-            main: "#602020b0"
+            main: "#602020b0",
         },
         secondary: {
-            main: "#154015b0"
+            main: "#154015b0",
         },
-        type: "dark",
+        mode: "dark",
     },
 });
 
@@ -125,7 +143,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, state: Sta
                 return (
                     <ThemeProvider theme={ chipTheme }>
                         <Chip color={ color } size="small" style={ style }
-                              label={ value.toFixed(0) + " hp/s" } />
+                              label={ value.toFixed(0) + " hp/s" }/>
                     </ThemeProvider>
                 );
             }
@@ -197,6 +215,8 @@ export function UnitList() {
         ],
     });
 
+    const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
+
     const headers = useMemo(() => state.columns
             .map(value => Headers[value])
             .map(value => <TableCell key={ value }>{ value }</TableCell>),
@@ -204,7 +224,7 @@ export function UnitList() {
     );
 
     const units = data.units.all
-        .sort(compare)
+        .sort(createComparer(sortOrder))
         .map(unit => (
             <TableRow>
                 { state.columns.map(column => renderColumn(unit, column, data, state, dispatch)) }
@@ -218,6 +238,8 @@ export function UnitList() {
                 <Paper className="section-title">
                     <h2>Units</h2>
                 </Paper>
+                <SortEditor options={ state.columns } order={ sortOrder } onChange={ setSortOrder }
+                            label={ key => Headers[key] }/>
                 <TableContainer component={ Paper }>
                     <Table>
                         <TableHead>

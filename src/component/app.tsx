@@ -7,18 +7,24 @@ import { GOOGLE_API_KEY } from "../gapi/config";
 import { Effect } from "../resource/effect";
 import { DataContextProvider } from "../context/data";
 import { UnitList } from "./unit";
-import { Backdrop, CircularProgress, createTheme, ThemeProvider } from "@material-ui/core";
-import { blue, cyan } from "@material-ui/core/colors";
 import { WeaponComponent } from "../resource/weapon-component";
+import { cyan } from "@mui/material/colors";
+import { Backdrop, CircularProgress, createTheme, ThemeProvider } from "@mui/material";
 
 const spreadsheet = SheetClient.create(GOOGLE_API_KEY, "v4")
     .then(client => client.spreadsheet("1wa0nWiy-uXbePbXfQKQDbQie4fm8MRCdYizp0vX1ZRU"));
 
 const theme = createTheme({
     palette: {
-        primary: blue,
+        primary: {
+            main: "#fff"
+        },
         secondary: cyan,
-        type: "dark",
+        background: {
+            paper: "#383838",
+            default: "#2a2a2a"
+        },
+        mode: "dark"
     },
 });
 
