@@ -1,0 +1,1 @@
+(()=>{"use strict";var e={533:e=>{e.exports=ReactDOM}},r={};function t(n){var o=r[n];if(void 0!==o)return o.exports;var d=r[n]={exports:{}};return e[n](d,d.exports,t),d.exports}(()=>{const e=t(533),r=document.body.appendChild(document.createElement("div"));(0,e.render)(null,r)})()})();

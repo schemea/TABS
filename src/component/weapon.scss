@@ -1,0 +1,44 @@
+.weapon-view {
+
+  min-width: 200px;
+
+  .weapon-section {
+    background-color: rgba(0, 0, 0, 0.2);
+    width: 100%;
+    margin: 10px 0 15px;
+    padding: 5px 15px;
+  }
+
+  .weapon-stats, .weapon-effect {
+    font-size: 0.8rem;
+  }
+
+  .component-stats {
+    font-size: 0.7rem;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    grid-gap: 0 15px;
+  }
+
+  table {
+    border-spacing: 0;
+    width: 100%;
+    margin: 5px 0;
+
+    tbody {
+      display: table-row-group;
+    }
+
+    td {
+      padding: 10px;
+
+      &:first-child {
+        width: 90px;
+      }
+    }
+
+    tr:not(:last-child) td {
+      border-bottom: 1px solid #ccc8;
+    }
+  }
+}

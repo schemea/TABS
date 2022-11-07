@@ -1,0 +1,33 @@
+.unit-list {
+  width: max-content;
+  min-width: 80%;
+  padding: 5px 20px;
+  margin: auto;
+}
+
+.unit-weapon {
+  display: flex;
+  justify-content: stretch;
+  align-items: center;
+  width: 100%;
+
+  > span {
+    flex-grow: 1;
+  }
+}
+
+.weapon-popover {
+  pointer-events: none;
+
+  .MuiPopover-paper {
+    pointer-events: all;
+  }
+}
+
+//
+//
+//.unit-stat {
+//  display: flex;
+//  align-items: center;
+//  justify-content: center;
+//}
