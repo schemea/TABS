@@ -21,13 +21,17 @@ export class WeaponComponent {
     @Type("float")
     public readonly dps: number;
 
+    @Type("float")
+    @Column("shoot delay")
+    public readonly shootDelay: number;
 
-    constructor(source: string, name: string, damage: number[], forceOnHit: number, radius: number, dps: number) {
+    constructor(source: string, name: string, damage: number[], forceOnHit: number, radius: number, dps: number, shootDelay: number) {
         this.source = source;
         this.name = name;
         this.damage = damage;
         this.forceOnHit = forceOnHit;
         this.radius = radius;
         this.dps = dps;
+        this.shootDelay = shootDelay;
     }
 }
