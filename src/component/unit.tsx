@@ -156,7 +156,7 @@ export function UnitList() {
     const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
     const popin = usePopin<Weapon>();
 
-    const [columns, setColumns] = useState([
+    const [ columns, setColumns ] = useState([
         Columns.name,
         Columns.faction,
         Columns.cost,
@@ -175,10 +175,18 @@ export function UnitList() {
 
     const units = data.units.all
         .sort(createComparer(sortOrder))
-        .map(unit => (
-            <TableRow>
-                { columns.map(column => renderColumn(unit, column, data, popin)) }
-            </TableRow>
+        .map((unit, index, units): [ Unit, boolean ] => [ unit, unit.faction !== units[index - 1]?.faction ])
+        .map(([ unit, isNewFaction ]) => (
+            <Fragment>
+                { isNewFaction && sortOrder[0] === Columns.faction && (
+                    <TableRow>
+                        <TableCell className="faction-section" colSpan={ columns.length }>{ unit.faction }</TableCell>
+                    </TableRow>
+                ) }
+                <TableRow>
+                    { columns.map(column => renderColumn(unit, column, data, popin)) }
+                </TableRow>
+            </Fragment>
         ));
 
     return (
