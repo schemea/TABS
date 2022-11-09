@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from "react";
+import React, { CSSProperties, Fragment, useState } from "react";
 import { Grow, Paper, styled } from "@mui/material";
 import { useTimer } from "../hook/timer";
 import { getUntransformedBounds } from "../witchcraft/revert-transform";
@@ -70,13 +70,23 @@ export function usePopin<T>() {
 
     function remove(id: string) {
         return setState(state.filter(item => item.id !== id));
+    }
 
+    function getStyle(open: boolean): CSSProperties {
+        if (open) {
+            return { zIndex: 1000 };
+        }
+
+        return {
+            zIndex: 900,
+            pointerEvents: "none"
+        };
     }
 
     function renderItem(item: State<T>, cb: (data: T) => React.ReactElement) {
         return (
-            <Root ref={ updatePosition(item) } key={ item.id } style={ { zIndex: item.open ? 1000 : 900 } }>
-                <Grow in={ item.open } appear={ true }
+            <Root ref={ updatePosition(item) } key={ item.id } style={ getStyle(item.open) }>
+                <Grow in={ item.open } appear={ true } unmountOnExit
                       onExited={ () => remove(item.id) }>
                     <Paper>
                         { cb(item.data) }
