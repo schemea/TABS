@@ -16,10 +16,10 @@ import {
     TableHead,
     TableRow,
     ThemeProvider,
-    Tooltip,
 } from "@mui/material";
 import { SortEditor } from "./sort-editor";
 import { Popin, usePopin } from "./popin";
+import { Subunit } from "../resource/subunit";
 
 function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
     const factionOrder = [
@@ -41,6 +41,8 @@ function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
 
     switch (key) {
         case "faction":
+            console.log(a, b);
+            console.log(a.faction, b.faction);
             return [ a, b ]
                 .map(unit => unit.faction.toUpperCase())
                 .map(faction => factionOrder.indexOf(faction))
@@ -144,17 +146,48 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         return null;
     }
 
+    function stat<K extends keyof Unit>(key: K) {
+        const value = unit[key];
+        const subunitValues = data.subunits.findBy("source", unit.name)
+            .filter(subunit => !!subunit[key as keyof Subunit])
+            .map(subunit => (
+                <Fragment>
+                    <div>{ subunit.name }</div>
+                    <div>{ subunit[key as keyof Subunit].toLocaleString() }</div>
+                </Fragment>
+            ));
+
+        if (subunitValues.length) {
+            if (value) {
+                subunitValues.unshift(
+                    <Fragment>
+                        <div>unit</div>
+                        <div>{ value.toLocaleString() }</div>
+                    </Fragment>,
+                );
+            }
+
+            return (<div className="subunit-stats">{ subunitValues }</div>);
+        }
+
+        return (
+            <Fragment>{ value.toLocaleString() }</Fragment>
+        );
+    }
+
     switch (column) {
+        case Columns.name:
+            return <TableCell className="unit-stat" key={ column }>{ unit[column] }</TableCell>;
         case Columns.cost:
             return <TableCell className="unit-stat" key={ column }>{ unit[column].toLocaleString() }</TableCell>;
-        case Columns.hp:
-            return (
-                <TableCell className="unit-stat" key={ Columns.hp }>
-                    <Tooltip title={ (unit.hp / unit.cost).toFixed(2) + " hp per gold" }>
-                        <div>{ unit.hp.toLocaleString() }</div>
-                    </Tooltip>
-                </TableCell>
-            );
+        // case Columns.hp:
+        //     return (
+        //         <TableCell className="unit-stat" key={ Columns.hp }>
+        //             <Tooltip title={ (unit.hp / unit.cost).toFixed(2) + " hp per gold" }>
+        //                 <div>{ unit.hp.toLocaleString() }</div>
+        //             </Tooltip>
+        //         </TableCell>
+        //     );
         case Columns.mainWeapon:
         case Columns.offWeapon:
             return (
@@ -169,7 +202,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
                 </TableCell>
             );
         default:
-            return <TableCell className="unit-stat" key={ column }>{ unit[column] || "" }</TableCell>;
+            return <TableCell className="unit-stat" key={ column }>{ stat(column) }</TableCell>;
     }
 }
 
@@ -181,7 +214,7 @@ export function UnitList() {
         Columns.hp,
         Columns.mainWeapon,
         Columns.offWeapon,
-        Columns.rating,
+        // Columns.rating,
         Columns.comments,
     ];
 

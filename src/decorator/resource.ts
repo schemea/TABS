@@ -16,6 +16,19 @@ function parseValue(type: string, value: string): any {
     }
 }
 
+function getDefaultValue(type: string) {
+    switch (type) {
+        case "float":
+        case "int":
+            return 0;
+        case "list":
+            return [];
+        case "string":
+        default:
+            return "";
+    }
+}
+
 export function Resource<T>(clazz: Constructor<T>) {
     addDecoratorMetadata(clazz, Resource);
     Object.assign(clazz, {
@@ -36,7 +49,11 @@ export function Resource<T>(clazz: Constructor<T>) {
                     } else {
                         value = parseValue(type, value);
                     }
+                } else {
+                    value = getDefaultValue(type);
                 }
+
+                console.log(value);
 
                 object[key] = value;
             }

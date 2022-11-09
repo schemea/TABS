@@ -87,7 +87,7 @@ export class Sheet<T> {
     constructor(data?: string[][], private readonly clazz?: Constructor<T> & { from?: Function }) {
         if (data) {
             this.headers = data[0]?.map(value => value.toLowerCase()) || [];
-            this.values = data.slice(1) || [];
+            this.values = data.slice(1).filter(entry => entry.length > 0) || [];
         } else {
             this.headers = [];
             this.values = [];
@@ -119,6 +119,10 @@ export class Sheet<T> {
         const map: Record<string, any> = this.values[y]
             .map((value, index) => [ this.headers[index], value ])
             .reduce((obj, [ key, value ]) => Object.assign(obj, { [key]: value }), {});
+
+        for (let i = this.values[y].length; i < this.headers.length; i++) {
+            map[this.headers[i]] = "";
+        }
 
         if (this.clazz) {
             if (typeof this.clazz.from !== "function") throw new Error(this.clazz.name + " does not have a method 'from'");

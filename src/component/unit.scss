@@ -5,6 +5,13 @@
   margin: auto;
 }
 
+.subunit-stats {
+  font-size: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-gap: 0 15px;
+}
+
 td.faction-section {
   text-align: center;
   letter-spacing: 2.5px;
