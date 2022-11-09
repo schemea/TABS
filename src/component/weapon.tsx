@@ -36,6 +36,7 @@ function getSuffix<K extends keyof Weapon>(key: K): string {
     switch (key) {
         case "cooldown":
         case "shootDelay":
+        case "reload":
             return "s";
         case "damage":
             return " hp";
@@ -126,11 +127,13 @@ export function WeaponView({ weapon }: Props) {
     const statNames: (keyof Weapon)[] = [
         "type",
         "range",
+        "count",
         "projectile",
         "damage",
         "cooldown",
         "dps",
         "shootDelay",
+        "reload",
         "forceOnHit",
     ];
 

@@ -7,6 +7,9 @@ export class WeaponComponent {
 
     public readonly name: string;
 
+    @Type("int")
+    public readonly count: number;
+
     @Type("float")
     @List("-")
     public readonly damage: number[];
@@ -25,9 +28,11 @@ export class WeaponComponent {
     @Column("shoot delay")
     public readonly shootDelay: number;
 
-    constructor(source: string, name: string, damage: number[], forceOnHit: number, radius: number, dps: number, shootDelay: number) {
+
+    constructor(source: string, name: string, count: number, damage: number[], forceOnHit: number, radius: number, dps: number, shootDelay: number) {
         this.source = source;
         this.name = name;
+        this.count = count;
         this.damage = damage;
         this.forceOnHit = forceOnHit;
         this.radius = radius;
