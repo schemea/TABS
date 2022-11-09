@@ -22,7 +22,29 @@ import { SortEditor } from "./sort-editor";
 import { Popin, usePopin } from "./popin";
 
 function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
+    const factionOrder = [
+        "TRIBAL",
+        "FARMER",
+        "MEDIEVAL",
+        "ANCIENT",
+        "VIKING",
+        "DYNASTY",
+        "RENAISSANCE",
+        "PIRATE",
+        "SPOOKY",
+        "WILD WEST",
+        "LEGACY",
+        "GOOD",
+        "EVIL",
+        "SECRET",
+    ];
+
     switch (key) {
+        case "faction":
+            return [ a, b ]
+                .map(unit => unit.faction.toUpperCase())
+                .map(faction => factionOrder.indexOf(faction))
+                .reduce((a, b) => a - b);
         default:
             if (a[key] === undefined || a[key] === null) return -1;
             if (b[key] === undefined || b[key] === null) return 1;
@@ -152,11 +174,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
 }
 
 export function UnitList() {
-    const data = useDataContext();
-    const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
-    const popin = usePopin<Weapon>();
-
-    const [ columns, setColumns ] = useState([
+    let columns = [
         Columns.name,
         Columns.faction,
         Columns.cost,
@@ -165,7 +183,15 @@ export function UnitList() {
         Columns.offWeapon,
         Columns.rating,
         Columns.comments,
-    ]);
+    ];
+
+    const data = useDataContext();
+    const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
+    const popin = usePopin<Weapon>();
+
+    // if (sortOrder[0] === Columns.faction) {
+    //     columns = columns.filter(value => value !== Columns.faction);
+    // }
 
     const headers = useMemo(() => columns
             .map(value => Headers[value])
