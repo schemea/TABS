@@ -1,6 +1,7 @@
 import React, { Fragment, useState } from "react";
 import { Grow, Paper, styled } from "@mui/material";
 import { useTimer } from "../hook/timer";
+import { getUntransformedBounds } from "../witchcraft/revert-transform";
 
 type Anchor = MouseEvent | React.MouseEvent;
 
@@ -46,8 +47,11 @@ function updatePosition(state: State<any>) {
 
         if (anchor.target instanceof HTMLElement) {
             const { right, top, bottom } = anchor.target.getBoundingClientRect();
+            const { height } = getUntransformedBounds(element);
             x = right;
             y = (top + bottom) / 2;
+            console.log(innerHeight, height);
+            y = Math.min(y, innerHeight - height / 2);
         }
 
         element.style.left = x + "px";
@@ -57,34 +61,35 @@ function updatePosition(state: State<any>) {
 
 export function usePopin<T>() {
     const [ state, setState ] = useState<State<T>[]>([]);
+    const startTimer = useTimer();
 
     function closed() {
         return state.map(item => ({ ...item, open: false }));
+
     }
 
     function remove(id: string) {
         return setState(state.filter(item => item.id !== id));
+
     }
 
-    const startTimer = useTimer();
+    function renderItem(item: State<T>, cb: (data: T) => React.ReactElement) {
+        return (
+            <Root ref={ updatePosition(item) } key={ item.id } style={ { zIndex: item.open ? 1000 : 900 } }>
+                <Grow in={ item.open } appear={ true }
+                      onExited={ () => remove(item.id) }>
+                    <Paper>
+                        { cb(item.data) }
+                    </Paper>
+                </Grow>
+            </Root>
+        );
+    }
 
 
     return {
         render(cb: (data: T) => React.ReactElement) {
-            return (
-                <Fragment>
-                    { state.map(item => (
-                        <Root ref={ updatePosition(item) } key={ item.id }>
-                            <Grow in={ item.open } appear={ true }
-                                  onExited={ () => remove(item.id) }>
-                                <Paper>
-                                    { cb(item.data) }
-                                </Paper>
-                            </Grow>
-                        </Root>
-                    )) }
-                </Fragment>
-            );
+            return <Fragment>{ state.map(item => renderItem(item, cb)) }</Fragment>;
         },
         show(data: T, anchor?: Anchor) {
             if (data === state[state.length - 1]?.data) return;
