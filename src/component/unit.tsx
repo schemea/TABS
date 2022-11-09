@@ -1,17 +1,14 @@
 import "./unit.scss";
-import React, { Dispatch, Fragment, useEffect, useMemo, useReducer, useState } from "react";
+import React, { Fragment, useMemo, useState } from "react";
 import { Unit } from "../resource/unit";
 import { DataContext, useDataContext } from "../context/data";
 import { Weapon } from "../resource/weapon";
 import { WeaponView } from "./weapon";
-import { usePreviousFallback } from "../hook/fallback";
-import { useTimer } from "../hook/timer";
 import naturalCompare from "string-natural-compare";
 import {
     Chip,
     createTheme,
     Paper,
-    Popover,
     Table,
     TableBody,
     TableCell,
@@ -22,31 +19,7 @@ import {
     Tooltip,
 } from "@mui/material";
 import { SortEditor } from "./sort-editor";
-
-
-interface State {
-    columns: Columns[];
-    weapon?: Weapon;
-    anchor?: HTMLElement;
-}
-
-enum ActionType {
-    columns,
-    weapon
-}
-
-interface ColumnsAction {
-    type: ActionType.columns;
-    columns: Columns[];
-}
-
-interface WeaponAction {
-    type: ActionType.weapon;
-    weapon: Weapon | undefined;
-    anchor: HTMLElement | undefined;
-}
-
-type Action = ColumnsAction | WeaponAction
+import { Popin, usePopin } from "./popin";
 
 function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
     switch (key) {
@@ -105,16 +78,14 @@ const chipTheme = createTheme({
     },
 });
 
-function renderColumn(unit: Unit, column: Columns, data: DataContext, state: State, dispatch: Dispatch<Action>) {
+function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Popin<Weapon>) {
     function weapon(name?: string) {
         return function (event: React.MouseEvent<HTMLElement>) {
             const weapon = name ? data.weapons.findBy("name", name)[0] : undefined;
-            if (state.weapon !== weapon) {
-                dispatch({
-                    type: ActionType.weapon,
-                    weapon,
-                    anchor: event.target as HTMLElement,
-                });
+            if (weapon) {
+                popin.show(weapon, event);
+            } else {
+                popin.hide();
             }
         };
     }
@@ -180,65 +151,44 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, state: Sta
     }
 }
 
-function reducer(state: State, action: Action): State {
-    switch (action.type) {
-        case ActionType.weapon:
-            return {
-                ...state,
-                weapon: action.weapon,
-                anchor: action.anchor,
-            };
-        case ActionType.columns:
-            return {
-                ...state,
-                columns: action.columns,
-            };
-
-        default:
-            return state;
-    }
-}
-
 export function UnitList() {
     const data = useDataContext();
-
-    const [ state, dispatch ] = useReducer(reducer, {
-        columns: [
-            Columns.name,
-            Columns.faction,
-            Columns.cost,
-            Columns.hp,
-            Columns.mainWeapon,
-            Columns.offWeapon,
-            Columns.rating,
-            Columns.comments,
-        ],
-    });
-
     const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
+    const popin = usePopin<Weapon>();
 
-    const headers = useMemo(() => state.columns
+    const [columns, setColumns] = useState([
+        Columns.name,
+        Columns.faction,
+        Columns.cost,
+        Columns.hp,
+        Columns.mainWeapon,
+        Columns.offWeapon,
+        Columns.rating,
+        Columns.comments,
+    ]);
+
+    const headers = useMemo(() => columns
             .map(value => Headers[value])
             .map(value => <TableCell key={ value }>{ value }</TableCell>),
-        [ state.columns ],
+        [ columns ],
     );
 
     const units = data.units.all
         .sort(createComparer(sortOrder))
         .map(unit => (
             <TableRow>
-                { state.columns.map(column => renderColumn(unit, column, data, state, dispatch)) }
+                { columns.map(column => renderColumn(unit, column, data, popin)) }
             </TableRow>
         ));
 
     return (
         <Fragment>
-            <WeaponPopover weapon={ state.weapon } anchor={ state.anchor }/>
+            { popin.render(data => <WeaponView weapon={ data }/>) }
             <div className="unit-list">
                 <Paper className="section-title">
                     <h2>Units</h2>
                 </Paper>
-                <SortEditor options={ state.columns } order={ sortOrder } onChange={ setSortOrder }
+                <SortEditor options={ columns } order={ sortOrder } onChange={ setSortOrder }
                             label={ key => Headers[key] }/>
                 <TableContainer component={ Paper }>
                     <Table>
@@ -252,38 +202,5 @@ export function UnitList() {
                 </TableContainer>
             </div>
         </Fragment>
-    );
-}
-
-
-function WeaponPopover(props: { weapon?: Weapon, anchor?: HTMLElement }) {
-    const popover = usePreviousFallback(
-        { weapon: props.weapon, anchor: props.anchor },
-        popup => !!popup.weapon,
-        {},
-    );
-
-    const content = popover.weapon ? <WeaponView weapon={ popover.weapon }/> : null;
-    const [ open, setOpen ] = useState(false);
-    const startTimer = useTimer();
-
-    useEffect(function () {
-        startTimer(() => setOpen(!!props.weapon), 150);
-    }, [ !!props.weapon ]);
-
-    return (
-        <Popover className="weapon-popover"
-                 anchorEl={ popover.anchor } open={ open }
-                 anchorOrigin={ {
-                     vertical: "center",
-                     horizontal: "right",
-                 } }
-                 transformOrigin={ {
-                     vertical: "center",
-                     horizontal: "left",
-                 } }
-                 disableRestoreFocus>
-            { content }
-        </Popover>
     );
 }
