@@ -1,4 +1,4 @@
-import React, { CSSProperties, Fragment, useState } from "react";
+import React, { CSSProperties, Fragment, useRef, useState } from "react";
 import { Grow, Paper, styled } from "@mui/material";
 import { useTimer } from "../hook/timer";
 import { getUntransformedBounds } from "../witchcraft/revert-transform";
@@ -60,16 +60,17 @@ function updatePosition(state: State<any>) {
 }
 
 export function usePopin<T>() {
-    const [ state, setState ] = useState<State<T>[]>([]);
+    const items = useRef<State<T>[]>([]);
     const startTimer = useTimer();
+    const [ , update ] = useState({});
 
     function closed() {
-        return state.map(item => ({ ...item, open: false }));
-
+        return items.current.map(item => ({ ...item, open: false }));
     }
 
     function remove(id: string) {
-        return setState(state.filter(item => item.id !== id));
+        items.current = items.current.filter(item => item.id !== id);
+        update({});
     }
 
     function getStyle(open: boolean): CSSProperties {
@@ -79,7 +80,7 @@ export function usePopin<T>() {
 
         return {
             zIndex: 900,
-            pointerEvents: "none"
+            pointerEvents: "none",
         };
     }
 
@@ -99,21 +100,27 @@ export function usePopin<T>() {
 
     return {
         render(cb: (data: T) => React.ReactElement) {
-            return <Fragment>{ state.map(item => renderItem(item, cb)) }</Fragment>;
+            return <Fragment>{ items.current.map(item => renderItem(item, cb)) }</Fragment>;
         },
         show(data: T, anchor?: Anchor) {
-            if (data === state[state.length - 1]?.data) return;
+            if (data === items.current[items.current.length - 1]?.data) return;
 
             startTimer(
-                () => setState([
-                    ...closed(),
-                    { open: true, data, anchor, id: id() },
-                ]), 20,
+                () => {
+                    items.current = [
+                        ...closed(),
+                        { open: true, data, anchor, id: id() },
+                    ];
+                    update({});
+                }, 20,
             );
 
         },
         hide() {
-            startTimer(() => setState(closed()), 20);
+            startTimer(() => {
+                items.current = closed();
+                update({});
+            }, 20);
         },
     };
 }
