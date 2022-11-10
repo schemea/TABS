@@ -21,19 +21,21 @@ export class Unit {
     @Column("off weapon")
     public readonly offWeapon: string;
 
+    public readonly ability: string;
+
     @Type("int")
     public readonly rating: number;
 
     public readonly comments: string;
 
-
-    constructor(faction: string, name: string, cost: number, hp: number, mainWeapon: string, offWeapon: string, rating: number, comments: string) {
-        this.faction = faction;
+    constructor(name: string, faction: string, cost: number, hp: number, mainWeapon: string, offWeapon: string, ability: string, rating: number, comments: string) {
         this.name = name;
+        this.faction = faction;
         this.cost = cost;
         this.hp = hp;
         this.mainWeapon = mainWeapon;
         this.offWeapon = offWeapon;
+        this.ability = ability;
         this.rating = rating;
         this.comments = comments;
     }

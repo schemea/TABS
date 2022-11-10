@@ -1,5 +1,5 @@
-import React, { CSSProperties, Fragment, useRef, useState } from "react";
-import { Grow, Paper, styled } from "@mui/material";
+import React, { Fragment, useRef, useState } from "react";
+import { Grow, Paper, styled, SxProps } from "@mui/material";
 import { useTimer } from "../hook/timer";
 import { getUntransformedBounds } from "../witchcraft/revert-transform";
 
@@ -72,7 +72,7 @@ export function usePopin<T>() {
         update({});
     }
 
-    function getStyle(open: boolean): CSSProperties {
+    function getStyle(open: boolean): SxProps {
         if (open) {
             return { zIndex: 1000 };
         }
@@ -85,10 +85,10 @@ export function usePopin<T>() {
 
     function renderItem(item: State<T>, cb: (data: T) => React.ReactElement) {
         return (
-            <Root ref={ updatePosition(item) } key={ item.id } style={ getStyle(item.open) }>
+            <Root ref={ updatePosition(item) } key={ item.id } sx={ getStyle(item.open) }>
                 <Grow in={ item.open } appear={ true } unmountOnExit
                       onExited={ () => remove(item.id) }>
-                    <Paper>
+                    <Paper sx={ { boxShadow: 4 } }>
                         { cb(item.data) }
                     </Paper>
                 </Grow>

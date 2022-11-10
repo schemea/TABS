@@ -5,10 +5,12 @@ import { Weapon } from "../resource/weapon";
 import { Effect } from "../resource/effect";
 import { WeaponComponent } from "../resource/weapon-component";
 import { Subunit } from "../resource/subunit";
+import { Ability } from "../resource/ability";
 
 export interface DataContext {
     units: Sheet<Unit>;
     subunits: Sheet<Subunit>;
+    abilities: Sheet<Ability>;
     weapons: Sheet<Weapon>;
     weaponComponents: Sheet<WeaponComponent>;
     effects: Sheet<Effect>;
@@ -17,6 +19,7 @@ export interface DataContext {
 const context = createContext<DataContext>({
     units: new Sheet<Unit>(),
     subunits: new Sheet<Subunit>(),
+    abilities: new Sheet<Ability>(),
     weapons: new Sheet<Weapon>(),
     weaponComponents: new Sheet<WeaponComponent>(),
     effects: new Sheet<Effect>(),

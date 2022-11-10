@@ -11,6 +11,7 @@ import { WeaponComponent } from "../resource/weapon-component";
 import { cyan } from "@mui/material/colors";
 import { Backdrop, CircularProgress, createTheme, ThemeProvider } from "@mui/material";
 import { Subunit } from "../resource/subunit";
+import { Ability } from "../resource/ability";
 
 const spreadsheet = SheetClient.create(GOOGLE_API_KEY, "v4")
     .then(client => client.spreadsheet("1wa0nWiy-uXbePbXfQKQDbQie4fm8MRCdYizp0vX1ZRU"));
@@ -35,11 +36,12 @@ export function Application() {
         Promise.all([
             spreadsheet.then(spreadsheet => spreadsheet.sheet("units", Unit)),
             spreadsheet.then(spreadsheet => spreadsheet.sheet("subunits", Subunit)),
+            spreadsheet.then(spreadsheet => spreadsheet.sheet("abilities", Ability)),
             spreadsheet.then(spreadsheet => spreadsheet.sheet("weapons", Weapon)),
             spreadsheet.then(spreadsheet => spreadsheet.sheet("weapon components", WeaponComponent)),
             spreadsheet.then(spreadsheet => spreadsheet.sheet("effects", Effect)),
         ]),
-        ([ units, subunits, weapons, weaponComponents, effects ]) => ({ units, subunits, weapons, weaponComponents, effects }),
+        ([ units, subunits, abilities, weapons, weaponComponents, effects ]) => ({ units, subunits, abilities, weapons, weaponComponents, effects }),
     );
 
     return (

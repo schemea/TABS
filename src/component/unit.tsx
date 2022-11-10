@@ -20,8 +20,12 @@ import {
 import { SortEditor } from "./sort-editor";
 import { Popin, usePopin } from "./popin";
 import { Subunit } from "../resource/subunit";
+import { Ability } from "../resource/ability";
+import { AbilityView } from "./ability";
 
 type SortOption = Columns.faction | Columns.name | Stat
+
+type PopinData = { type: "weapon", data: Weapon } | { type: "ability", data: Ability };
 
 function compare<K extends SortOption>(data: DataContext, key: K, a: Unit, b: Unit): number {
     const factionOrder = [
@@ -80,6 +84,7 @@ enum Columns {
     hp         = "hp",
     mainWeapon = "mainWeapon",
     offWeapon  = "offWeapon",
+    ability    = "ability",
     rating     = "rating",
     comments   = "comments"
 }
@@ -99,6 +104,7 @@ const Headers: Record<Columns, string> = {
     [Columns.hp]: "HP",
     [Columns.mainWeapon]: "Main Weapon",
     [Columns.offWeapon]: "Off Weapon",
+    [Columns.ability]: "Ability",
     [Columns.rating]: "Rating",
     [Columns.comments]: "Comments",
 };
@@ -183,12 +189,24 @@ function getMergedUnitStat(data: DataContext, key: Stat, unit: Unit) {
     }
 }
 
-function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Popin<Weapon>) {
+function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Popin<PopinData>) {
     function weapon(name?: string) {
         return function (event: React.MouseEvent<HTMLElement>) {
             const weapon = name ? data.weapons.findBy("name", name)[0] : undefined;
             if (weapon) {
-                popin.show(weapon, event);
+                popin.show({ type: "weapon", data: weapon }, event);
+            } else {
+                popin.hide();
+            }
+        };
+    }
+
+    function ability(name?: string) {
+        return function (event: React.MouseEvent<HTMLElement>) {
+            const ability = name ? data.abilities.findBy("name", name)[0] : undefined;
+            console.log(ability);
+            if (ability) {
+                popin.show({ type: "ability", data: ability }, event);
             } else {
                 popin.hide();
             }
@@ -272,6 +290,15 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
                     </div>
                 </TableCell>
             );
+        case Columns.ability:
+            return (
+                <TableCell className="unit-stat" key={ column }
+                    onMouseEnter={ ability(unit[column]) }
+                    onMouseLeave={ ability(undefined) }
+                >
+                    { stat(column) }
+                </TableCell>
+            );
         default:
             return <TableCell className="unit-stat" key={ column }>{ stat(column) }</TableCell>;
     }
@@ -292,6 +319,7 @@ export function UnitList() {
         Columns.faction,
         Columns.cost,
         Columns.hp,
+        Columns.ability,
         Columns.mainWeapon,
         Columns.offWeapon,
         // Columns.rating,
@@ -300,11 +328,11 @@ export function UnitList() {
 
     const data = useDataContext();
     const [ sortOrder, setSortOrder ] = useState<SortOption[]>([ Columns.faction, Stat.cost ]);
-    const popin = usePopin<Weapon>();
+    const popin = usePopin<PopinData>();
 
-    // if (sortOrder[0] === Columns.faction) {
-    //     columns = columns.filter(value => value !== Columns.faction);
-    // }
+    if (sortOrder[0] === Columns.faction) {
+        columns = columns.filter(value => value !== Columns.faction);
+    }
 
     const headers = useMemo(() => columns
             .map(value => Headers[value])
@@ -371,9 +399,18 @@ export function UnitList() {
         }
     }
 
+    function renderPopin(value: PopinData) {
+        switch (value.type) {
+            case "weapon":
+                return <WeaponView weapon={ value.data }/>;
+            case "ability":
+                return <AbilityView ability={ value.data }/>;
+        }
+    }
+
     return (
         <Fragment>
-            { popin.render(data => <WeaponView weapon={ data }/>) }
+            { popin.render(renderPopin) }
             <div className="unit-list">
                 <Paper className="section-title">
                     <h2>Units</h2>
