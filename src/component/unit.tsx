@@ -102,6 +102,15 @@ const chipTheme = createTheme({
     },
 });
 
+function getSuffix(key: keyof Unit) {
+    switch (key) {
+        case Columns.hp:
+            return " hp";
+        default:
+            return "";
+    }
+}
+
 function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Popin<Weapon>) {
     function weapon(name?: string) {
         return function (event: React.MouseEvent<HTMLElement>) {
@@ -146,6 +155,10 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         return null;
     }
 
+    function formatValue<K extends keyof Unit>(key: K, value: any) {
+        return value.toLocaleString() + getSuffix(key);
+    }
+
     function stat<K extends keyof Unit>(key: K) {
         const value = unit[key];
         const subunitValues = data.subunits.findBy("source", unit.name)
@@ -153,7 +166,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
             .map(subunit => (
                 <Fragment>
                     <div>{ subunit.name }</div>
-                    <div>{ subunit[key as keyof Subunit].toLocaleString() }</div>
+                    <div>{ formatValue(key, subunit[key as keyof Subunit]) }</div>
                 </Fragment>
             ));
 
@@ -162,7 +175,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
                 subunitValues.unshift(
                     <Fragment>
                         <div>unit</div>
-                        <div>{ value.toLocaleString() }</div>
+                        <div>{ formatValue(key, value) }</div>
                     </Fragment>,
                 );
             }
@@ -171,7 +184,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         }
 
         return (
-            <Fragment>{ value.toLocaleString() }</Fragment>
+            <Fragment>{ formatValue(key, value) }</Fragment>
         );
     }
 
