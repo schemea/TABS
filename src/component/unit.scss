@@ -6,17 +6,28 @@
 }
 
 .subunit-stats {
-  font-size: 0.8rem;
   display: grid;
   grid-template-columns: repeat(2, max-content);
   grid-gap: 0 15px;
 }
 
-td.faction-section {
-  text-align: center;
-  letter-spacing: 2.5px;
-  background-color: #3e3e3e;
-  text-transform: uppercase;
+.subunit-weapons, .subunit-stats {
+  font-size: 0.8rem;
+  .unit-weapon {
+    min-height: 18.3px;
+  }
+}
+
+td.MuiTableCell-body {
+  max-width: 400px;
+  text-align: justify;
+
+  &.faction-section {
+    text-align: center;
+    letter-spacing: 2.5px;
+    background-color: #3e3e3e;
+    text-transform: uppercase;
+  }
 }
 
 .unit-weapon {
@@ -40,6 +51,7 @@ td.faction-section {
 
 .sort-editor {
   margin-bottom: 10px;
+
   .MuiButton-root {
     min-width: 36.5px;
   }

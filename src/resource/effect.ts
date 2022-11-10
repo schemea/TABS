@@ -1,6 +1,5 @@
 import { Resource, Type } from "../decorator/resource";
 import { Index } from "../decorator/indexing";
-import { Column } from "../decorator/column";
 
 @Resource
 export class Effect {
@@ -14,14 +13,13 @@ export class Effect {
     public readonly dps: number;
 
     @Type("float")
-    @Column("total damage")
-    public readonly totalDamage: number;
+    public readonly damage: number;
 
 
-    constructor(source: string, duration: number, dps: number, totalDamage: number) {
+    constructor(source: string, duration: number, dps: number, damage: number) {
         this.source = source;
         this.duration = duration;
         this.dps = dps;
-        this.totalDamage = totalDamage;
+        this.damage = damage;
     }
 }

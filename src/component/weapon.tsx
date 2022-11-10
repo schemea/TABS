@@ -11,21 +11,36 @@ interface Props {
 }
 
 function renderEffect(effect: Effect, id: string) {
+    const columns: (keyof Omit<Effect, "source">)[] = [ "dps", "duration", "damage" ];
+
+    const names: Record<keyof Omit<Effect, "source">, string> = {
+        dps: "DPS",
+        duration: "Duration",
+        damage: "Damage",
+    };
+
+    function suffix(key: keyof Effect) {
+        switch (key) {
+            case "dps":
+                return " hp/s";
+            case "damage":
+                return " hp";
+            default:
+                return "";
+        }
+    }
+
     return (
         <table className="weapon-effect" key={ id }>
             <tbody>
-            <tr>
-                <td>DPS</td>
-                <td>{ effect.dps } hp/s</td>
-            </tr>
-            <tr>
-                <td>Duration</td>
-                <td>{ effect.duration }s</td>
-            </tr>
-            <tr>
-                <td>Total damage</td>
-                <td>{ effect.totalDamage } hp</td>
-            </tr>
+            { columns
+                .filter(key => !!effect[key])
+                .map(key => (
+                    <tr key={ key }>
+                        <td>{ names[key] }</td>
+                        <td>{ effect[key] }{ suffix(key) }</td>
+                    </tr>
+                )) }
             </tbody>
         </table>
     );

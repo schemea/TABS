@@ -151,7 +151,8 @@ function getMergedWeaponStat(data: DataContext, key: Stat, name: string, merger 
     switch (key) {
         case Stat.dps:
             value += data.effects.findBy("source", name)
-                .map(effect => effect.dps * effect.duration / weapon.cooldown)
+                .map(effect => effect.duration ? effect.dps * Math.min(1, effect.duration / weapon.cooldown)
+                                               : effect.damage / weapon.cooldown)
                 .reduce(merger, 0);
             break;
         default:
@@ -190,7 +191,7 @@ function getMergedUnitStat(data: DataContext, key: Stat, unit: Unit) {
 }
 
 function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Popin<PopinData>) {
-    function weapon(name?: string) {
+    function showWeapon(name?: string) {
         return function (event: React.MouseEvent<HTMLElement>) {
             const weapon = name ? data.weapons.findBy("name", name)[0] : undefined;
             if (weapon) {
@@ -201,10 +202,9 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         };
     }
 
-    function ability(name?: string) {
+    function showAbility(name?: string) {
         return function (event: React.MouseEvent<HTMLElement>) {
             const ability = name ? data.abilities.findBy("name", name)[0] : undefined;
-            console.log(ability);
             if (ability) {
                 popin.show({ type: "ability", data: ability }, event);
             } else {
@@ -264,6 +264,42 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         );
     }
 
+    function renderWeapon(key: Columns.mainWeapon | Columns.offWeapon) {
+        const subunits = data.subunits.findBy("source", unit.name)
+            .map(subunit => subunit[key]);
+
+        if (subunits.filter(value => !!value).length === 0) {
+            return (
+                <TableCell className="unit-stat" key={ key }
+                           onMouseEnter={ showWeapon(unit[key]) }
+                           onMouseLeave={ showWeapon(undefined) }
+                >
+                    <div className="unit-weapon">
+                        <span>{ unit[key]?.toLocaleString() }</span>
+                        { dps(unit[key]) }
+                    </div>
+                </TableCell>
+            );
+        }
+
+        return (
+            <TableCell className="unit-stat" key={ key }
+            >
+                <div className="subunit-weapons">
+                    { subunits.map(weapon => (
+                        <div className="unit-weapon" key={ weapon }
+                             onMouseEnter={ showWeapon(weapon) }
+                             onMouseLeave={ showWeapon(undefined) }
+                        >
+                            <span>{ weapon.toLocaleString() }</span>
+                            { dps(weapon) }
+                        </div>
+                    )) }
+                </div>
+            </TableCell>
+        );
+    }
+
     switch (column) {
         case Columns.name:
             return <TableCell className="unit-stat" key={ column }>{ unit[column] }</TableCell>;
@@ -279,22 +315,12 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         //     );
         case Columns.mainWeapon:
         case Columns.offWeapon:
-            return (
-                <TableCell className="unit-stat" key={ column }
-                           onMouseEnter={ weapon(unit[column]) }
-                           onMouseLeave={ weapon(undefined) }
-                >
-                    <div className="unit-weapon">
-                        <span>{ unit[column]?.toLocaleString() }</span>
-                        { dps(unit[column]) }
-                    </div>
-                </TableCell>
-            );
+            return renderWeapon(column);
         case Columns.ability:
             return (
                 <TableCell className="unit-stat" key={ column }
-                    onMouseEnter={ ability(unit[column]) }
-                    onMouseLeave={ ability(undefined) }
+                           onMouseEnter={ showAbility(unit[column]) }
+                           onMouseLeave={ showAbility(undefined) }
                 >
                     { stat(column) }
                 </TableCell>
