@@ -1,6 +1,6 @@
 import { resolveEndpoint } from "./utils";
 import { Constructor } from "../types";
-import { getIndexes } from "../decorator";
+import { getIndexes } from "../decorator/indexing";
 
 const PLACEHOLDERS = {
     spreadsheet: "spreadsheetId",

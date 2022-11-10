@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { Constructor } from "../types";
 import { addDecoratorMetadata, hasDecorator } from "./utils";
+import { getMappings } from "./column";
 
 function parseValue(type: string, value: string): any {
     switch (type) {
@@ -34,7 +35,7 @@ export function Resource<T>(clazz: Constructor<T>) {
     Object.assign(clazz, {
         from(map: Record<string, any>) {
             const object = Object.create(clazz.prototype);
-            const mappings = Reflect.getMetadata("resource:mappings", clazz.prototype) || {};
+            const mappings = getMappings(clazz);
 
             for (let [ key, value ] of Object.entries(map)) {
                 if (mappings[key]) key = mappings[key];
@@ -67,14 +68,6 @@ export function Type<T>(type: "int" | "float" | "string") {
 
 export function List<T>(delimiter: string) {
     return Reflect.metadata("resource:delimiter", delimiter);
-}
-
-export function Column(value: string) {
-    return function (prototype: any, key: string) {
-        const mappings = Reflect.getMetadata("resource:mappings", prototype) || {};
-        mappings[value] = key;
-        Reflect.defineMetadata("resource:mappings", mappings, prototype);
-    };
 }
 
 export function isResource<T>(constructor?: Constructor<T>): constructor is (Constructor<T> & { from: Function });

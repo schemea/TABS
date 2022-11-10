@@ -1,5 +1,6 @@
-import { Column, List, Resource, Type } from "../decorator/resource";
-import { Index } from "../decorator";
+import { List, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator/indexing";
+import { Column } from "../decorator/column";
 
 export enum WeaponType {
     Melee,

@@ -21,7 +21,7 @@ import { SortEditor } from "./sort-editor";
 import { Popin, usePopin } from "./popin";
 import { Subunit } from "../resource/subunit";
 
-type SortOption = keyof Unit | "dps" | "range"
+type SortOption = Columns.faction | Columns.name | Stat
 
 function compare<K extends SortOption>(data: DataContext, key: K, a: Unit, b: Unit): number {
     const factionOrder = [
@@ -41,47 +41,17 @@ function compare<K extends SortOption>(data: DataContext, key: K, a: Unit, b: Un
         "SECRET",
     ];
 
-    function get<T = any>(object: any, key: string): T {
-        return object[key];
-    }
-
-    function subunit(key: keyof Unit, unit: Unit): number {
-        return data.subunits.findBy("source", unit.name)
-            .map(value => get<number>(value, key) || 0)
-            .reduce((a, b) => a + b, 0);
-    }
-
-    function weapon(key: keyof Weapon, name: string): number {
-        if (!name) return 0;
-
-        let dps = data.weapons.findBy("name", name)
-            .map(value => get<number>(value, key) || 0)
-            .reduce((a, b) => a + b, 0);
-
-        dps += data.weaponComponents.findBy("source", name)
-            .map(value => get<number>(value, key) || 0)
-            .reduce((a, b) => a + b, 0);
-
-        return dps;
-    }
-
     switch (key) {
         case "faction":
             return [ a, b ]
                 .map(unit => unit.faction.toUpperCase())
                 .map(faction => factionOrder.indexOf(faction))
                 .reduce((a, b) => a - b);
-        case "hp":
+        case Stat.hp:
+        case Stat.dps:
+        case Stat.range:
             return [ a, b ]
-                .map(unit => get<number>(unit, key) + subunit(key, unit))
-                .reduce((a, b) => a - b);
-        case "dps":
-            return [ a, b ]
-                .map(unit => weapon(key, unit.mainWeapon) + weapon(key, unit.offWeapon))
-                .reduce((a, b) => a - b);
-        case "range":
-            return [ a, b ]
-                .map(unit => Math.max(weapon(key, unit.mainWeapon), weapon(key, unit.offWeapon)))
+                .map(unit => getMergedUnitStat(data, key, unit))
                 .reduce((a, b) => a - b);
         default:
             if (get(a, key) === undefined || get(a, key) === null) return -1;
@@ -114,6 +84,13 @@ enum Columns {
     comments   = "comments"
 }
 
+enum Stat {
+    cost  = "cost",
+    hp    = "hp",
+    dps   = "dps",
+    range = "range"
+}
+
 
 const Headers: Record<Columns, string> = {
     [Columns.name]: "Name",
@@ -138,12 +115,71 @@ const chipTheme = createTheme({
     },
 });
 
+function get<T, K extends keyof T>(target: T, key: K): T[K];
+function get<T>(target: any, key: string): T;
+function get(target: any, key: string) {
+    return target[key];
+}
+
 function getSuffix(key: keyof Unit) {
     switch (key) {
         case Columns.hp:
             return " hp";
         default:
             return "";
+    }
+}
+
+function getMergedWeaponStat(data: DataContext, key: Stat, name: string, merger = (a: number, b: number) => a + b) {
+    const weapon = data.weapons.findBy("name", name)[0];
+    if (!weapon) return 0;
+
+    let value = get<number>(weapon, key) || 0;
+
+    if (key === Stat.range) return value;
+
+    value += data.weaponComponents.findBy("source", name)
+        .map(value => get<number>(value, key) || 0)
+        .reduce(merger, 0);
+
+    switch (key) {
+        case Stat.dps:
+            value += data.effects.findBy("source", name)
+                .map(effect => effect.dps * effect.duration / weapon.cooldown)
+                .reduce(merger, 0);
+            break;
+        default:
+            value += data.effects.findBy("source", name)
+                .map(value => get<number>(value, key) || 0)
+                .reduce(merger, 0);
+            break;
+    }
+
+    return value;
+}
+
+function getMergedUnitStat(data: DataContext, key: Stat, unit: Unit) {
+
+    function subunit(): number {
+        return data.subunits.findBy("source", unit.name)
+            .map(value => get<number>(value, key) || 0)
+            .reduce((a, b) => a + b, 0);
+    }
+
+    function weapon(name: string, merger = (a: number, b: number) => a + b): number {
+        return getMergedWeaponStat(data, key, name, merger);
+    }
+
+
+    switch (key) {
+        case Stat.hp:
+            return unit[key] + subunit();
+        case Stat.dps:
+            return weapon(unit.mainWeapon) + weapon(unit.offWeapon);
+        case Stat.range:
+            return Math.max(weapon(unit.mainWeapon, Math.max), weapon(unit.offWeapon, Math.max));
+        default:
+            return unit[key];
     }
 }
 
@@ -160,34 +196,20 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
     }
 
     function dps(name: string) {
-        const style: React.CSSProperties = {
-            // position: "absolute",
-            // right: 0,
-            minWidth: "70px",
-        };
+        const style: React.CSSProperties = { minWidth: "70px" };
 
-        const weapon = name ? data.weapons.findBy("name", name)[0] : undefined;
-        if (weapon) {
-            let value = weapon.dps || 0;
+        const value = getMergedWeaponStat(data, Stat.dps, name);
 
-            value += data.effects.findBy("source", weapon.name)
-                .map(effect => (effect.dps * effect.duration) / weapon.cooldown)
-                .reduce((a, b) => a + b, 0);
-
-            value += data.weaponComponents.findBy("source", weapon.name)
-                .map(component => component.dps || 0)
-                .reduce((a, b) => a + b, 0);
-
-            if (value) {
-                const color = value > 0 ? "primary" : "secondary";
-                return (
-                    <ThemeProvider theme={ chipTheme }>
-                        <Chip color={ color } size="small" style={ style }
-                              label={ value.toFixed(0) + " hp/s" }/>
-                    </ThemeProvider>
-                );
-            }
+        if (value) {
+            const color = value > 0 ? "primary" : "secondary";
+            return (
+                <ThemeProvider theme={ chipTheme }>
+                    <Chip color={ color } size="small" style={ style }
+                          label={ value.toFixed(0) + " hp/s" }/>
+                </ThemeProvider>
+            );
         }
+
         return null;
     }
 
@@ -277,7 +299,7 @@ export function UnitList() {
     ];
 
     const data = useDataContext();
-    const [ sortOrder, setSortOrder ] = useState<SortOption[]>([ "faction", "cost" ]);
+    const [ sortOrder, setSortOrder ] = useState<SortOption[]>([ Columns.faction, Stat.cost ]);
     const popin = usePopin<Weapon>();
 
     // if (sortOrder[0] === Columns.faction) {
@@ -293,27 +315,61 @@ export function UnitList() {
     const sortOptions: SortOption[] = [
         Columns.name,
         Columns.faction,
-        Columns.cost,
-        Columns.hp,
-        "dps",
-        "range"
-    ]
+        Stat.cost,
+        Stat.hp,
+        Stat.dps,
+        Stat.range,
+    ];
 
     const units = data.units.all
         .sort(createComparer(data, sortOrder))
-        .map((unit, index, units): [ Unit, boolean ] => [ unit, unit.faction !== units[index - 1]?.faction ])
-        .map(([ unit, isNewFaction ]) => (
+        .map((unit, index, units): [ Unit, Unit | undefined ] => [ unit, units[index - 1] ])
+        .map(([ unit, previous ]) => (
             <Fragment>
-                { isNewFaction && sortOrder[0] === Columns.faction && (
-                    <TableRow>
-                        <TableCell className="faction-section" colSpan={ columns.length }>{ unit.faction }</TableCell>
-                    </TableRow>
-                ) }
+                { getDivider(previous, unit) }
                 <TableRow>
                     { columns.map(column => renderColumn(unit, column, data, popin)) }
                 </TableRow>
             </Fragment>
         ));
+
+    function getDivider(previous: Unit | undefined, current: Unit) {
+        function round(value: number) {
+            return Math.round(value / 10) * 10;
+        }
+
+        switch (sortOrder[0]) {
+            case Columns.faction:
+                if (previous && previous.faction === current.faction) return null;
+                return (
+                    <TableRow>
+                        <TableCell className="faction-section" colSpan={ columns.length }>
+                            { current.faction }
+                        </TableCell>
+                    </TableRow>
+                );
+            case Stat.range: {
+                let divider = 0;
+
+                if (previous) {
+                    const [ p, c ] = [ previous, current ]
+                        .map(unit => getMergedUnitStat(data, Stat.range, unit))
+                        .map(round);
+
+                    if (p === c) return null;
+                    else divider = c;
+                }
+
+                return (
+                    <TableRow>
+                        <TableCell className="faction-section" colSpan={ columns.length }>{ divider } WM</TableCell>
+                    </TableRow>
+                );
+            }
+            default:
+                return null;
+        }
+    }
 
     return (
         <Fragment>

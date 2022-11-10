@@ -1,5 +1,6 @@
-import { Column, Resource, Type } from "../decorator/resource";
-import { Index } from "../decorator";
+import { Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator/indexing";
+import { Column } from "../decorator/column";
 
 @Resource
 export class Unit {
