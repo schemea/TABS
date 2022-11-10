@@ -1,7 +1,9 @@
 import { Column, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator";
 
 @Resource
 export class Effect {
+    @Index
     public readonly source: string;
 
     @Type("float")

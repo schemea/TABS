@@ -1,8 +1,10 @@
 import { Column, List, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator";
 
 @Resource
 export class WeaponComponent {
 
+    @Index
     public readonly source: string;
 
     public readonly name: string;

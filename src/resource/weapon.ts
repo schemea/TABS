@@ -1,4 +1,5 @@
 import { Column, List, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator";
 
 export enum WeaponType {
     Melee,
@@ -6,6 +7,7 @@ export enum WeaponType {
 
 @Resource
 export class Weapon {
+    @Index
     public readonly name: string;
 
     public readonly type: WeaponType;

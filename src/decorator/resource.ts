@@ -30,7 +30,7 @@ function getDefaultValue(type: string) {
 }
 
 export function Resource<T>(clazz: Constructor<T>) {
-    addDecoratorMetadata(clazz, Resource);
+    addDecoratorMetadata(clazz, Resource, true);
     Object.assign(clazz, {
         from(map: Record<string, any>) {
             const object = Object.create(clazz.prototype);
@@ -52,8 +52,6 @@ export function Resource<T>(clazz: Constructor<T>) {
                 } else {
                     value = getDefaultValue(type);
                 }
-
-                console.log(value);
 
                 object[key] = value;
             }

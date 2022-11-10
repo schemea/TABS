@@ -60,7 +60,6 @@ export function SortEditor<T extends string>(props: Props<T>) {
     function remove() {
         const index = state.index;
         const order = props.order;
-        console.log(index);
         if (typeof index !== "number") return;
         close();
         const newOrder = [ ...order ];

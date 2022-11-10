@@ -10,8 +10,6 @@ export function getUntransformedBounds(element: HTMLElement) {
         .slice(1, -1)
         .map(value => parseFloat(value));
 
-    console.log(getComputedStyle(element).transform);
-
     const determinant = t[0] * t[3] - t[1] * t[2];
     return {
         width: width / t[0],

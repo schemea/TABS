@@ -1,9 +1,12 @@
 import { Column, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator";
 
 @Resource
 export class Unit {
-    public readonly faction: string;
+    @Index
     public readonly name: string;
+
+    public readonly faction: string;
 
     @Type("int")
     public readonly cost: number;

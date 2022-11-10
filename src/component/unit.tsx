@@ -21,7 +21,9 @@ import { SortEditor } from "./sort-editor";
 import { Popin, usePopin } from "./popin";
 import { Subunit } from "../resource/subunit";
 
-function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
+type SortOption = keyof Unit | "dps" | "range"
+
+function compare<K extends SortOption>(data: DataContext, key: K, a: Unit, b: Unit): number {
     const factionOrder = [
         "TRIBAL",
         "FARMER",
@@ -39,25 +41,59 @@ function compare<K extends keyof Unit>(key: K, a: Unit, b: Unit): number {
         "SECRET",
     ];
 
+    function get<T = any>(object: any, key: string): T {
+        return object[key];
+    }
+
+    function subunit(key: keyof Unit, unit: Unit): number {
+        return data.subunits.findBy("source", unit.name)
+            .map(value => get<number>(value, key) || 0)
+            .reduce((a, b) => a + b, 0);
+    }
+
+    function weapon(key: keyof Weapon, name: string): number {
+        if (!name) return 0;
+
+        let dps = data.weapons.findBy("name", name)
+            .map(value => get<number>(value, key) || 0)
+            .reduce((a, b) => a + b, 0);
+
+        dps += data.weaponComponents.findBy("source", name)
+            .map(value => get<number>(value, key) || 0)
+            .reduce((a, b) => a + b, 0);
+
+        return dps;
+    }
+
     switch (key) {
         case "faction":
-            console.log(a, b);
-            console.log(a.faction, b.faction);
             return [ a, b ]
                 .map(unit => unit.faction.toUpperCase())
                 .map(faction => factionOrder.indexOf(faction))
                 .reduce((a, b) => a - b);
+        case "hp":
+            return [ a, b ]
+                .map(unit => get<number>(unit, key) + subunit(key, unit))
+                .reduce((a, b) => a - b);
+        case "dps":
+            return [ a, b ]
+                .map(unit => weapon(key, unit.mainWeapon) + weapon(key, unit.offWeapon))
+                .reduce((a, b) => a - b);
+        case "range":
+            return [ a, b ]
+                .map(unit => Math.max(weapon(key, unit.mainWeapon), weapon(key, unit.offWeapon)))
+                .reduce((a, b) => a - b);
         default:
-            if (a[key] === undefined || a[key] === null) return -1;
-            if (b[key] === undefined || b[key] === null) return 1;
-            return naturalCompare(a[key].toString(), b[key].toString());
+            if (get(a, key) === undefined || get(a, key) === null) return -1;
+            if (get(b, key) === undefined || get(b, key) === null) return 1;
+            return naturalCompare(get(a, key).toString(), get(b, key).toString());
     }
 }
 
-function createComparer(order: (keyof Unit)[]) {
+function createComparer(data: DataContext, order: SortOption[]) {
     return function (...units: [ Unit, Unit ]): number {
         for (const key of order) {
-            const result = compare(key, ...units);
+            const result = compare(data, key, ...units);
             if (result !== 0) {
                 return result;
             }
@@ -219,6 +255,15 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
     }
 }
 
+function getSortLabel(key: SortOption) {
+    switch (key) {
+        case "dps":
+            return "DPS";
+        default:
+            return Headers[key as Columns] || (key[0].toUpperCase() + key.substring(1));
+    }
+}
+
 export function UnitList() {
     let columns = [
         Columns.name,
@@ -232,7 +277,7 @@ export function UnitList() {
     ];
 
     const data = useDataContext();
-    const [ sortOrder, setSortOrder ] = useState<(keyof Unit)[]>([ "faction", "cost" ]);
+    const [ sortOrder, setSortOrder ] = useState<SortOption[]>([ "faction", "cost" ]);
     const popin = usePopin<Weapon>();
 
     // if (sortOrder[0] === Columns.faction) {
@@ -245,8 +290,17 @@ export function UnitList() {
         [ columns ],
     );
 
+    const sortOptions: SortOption[] = [
+        Columns.name,
+        Columns.faction,
+        Columns.cost,
+        Columns.hp,
+        "dps",
+        "range"
+    ]
+
     const units = data.units.all
-        .sort(createComparer(sortOrder))
+        .sort(createComparer(data, sortOrder))
         .map((unit, index, units): [ Unit, boolean ] => [ unit, unit.faction !== units[index - 1]?.faction ])
         .map(([ unit, isNewFaction ]) => (
             <Fragment>
@@ -268,8 +322,9 @@ export function UnitList() {
                 <Paper className="section-title">
                     <h2>Units</h2>
                 </Paper>
-                <SortEditor options={ columns } order={ sortOrder } onChange={ setSortOrder }
-                            label={ key => Headers[key] }/>
+                <SortEditor options={ sortOptions }
+                            order={ sortOrder }
+                            onChange={ setSortOrder } label={ getSortLabel }/>
                 <TableContainer component={ Paper }>
                     <Table>
                         <TableHead>

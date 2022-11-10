@@ -50,7 +50,6 @@ function updatePosition(state: State<any>) {
             const { height } = getUntransformedBounds(element);
             x = right;
             y = (top + bottom) / 2;
-            console.log(innerHeight, height);
             y = Math.min(y, innerHeight - height / 2);
         }
 

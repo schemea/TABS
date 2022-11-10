@@ -1,5 +1,6 @@
 import { resolveEndpoint } from "./utils";
 import { Constructor } from "../types";
+import { getIndexes } from "../decorator";
 
 const PLACEHOLDERS = {
     spreadsheet: "spreadsheetId",
@@ -83,11 +84,30 @@ function compareValue<T>(a: T, b: T) {
 export class Sheet<T> {
     readonly headers: string[];
     readonly values: string[][];
+    readonly items: T[];
+    readonly indexes: Record<keyof T, Map<any, T[]>>;
 
     constructor(data?: string[][], private readonly clazz?: Constructor<T> & { from?: Function }) {
+        this.items = [];
+        this.indexes = {} as Record<keyof T, Map<any, T[]>>;
+
         if (data) {
             this.headers = data[0]?.map(value => value.toLowerCase()) || [];
             this.values = data.slice(1).filter(entry => entry.length > 0) || [];
+
+            for (let i = 0; i < this.rowCount; i++) {
+                this.items.push(this.row(i));
+            }
+            if (clazz) {
+                for (const key of getIndexes(clazz)) {
+                    const index = this.indexes[key] = new Map();
+                    for (const item of this.items) {
+                        const values = index.get(item[key]) || [];
+                        values.push(item);
+                        index.set(item[key], values);
+                    }
+                }
+            }
         } else {
             this.headers = [];
             this.values = [];
@@ -133,6 +153,11 @@ export class Sheet<T> {
     }
 
     findBy<K extends keyof T>(key: K, value: T[K]): T[] {
+        const index = this.indexes[key];
+        if (index) {
+            return index.get(value) || [];
+        }
+
         const results: T[] = [];
 
         for (let i = 0; i < this.rowCount; i++) {
@@ -146,12 +171,6 @@ export class Sheet<T> {
     }
 
     get all() {
-        const items: T[] = [];
-
-        for (let i = 0; i < this.rowCount; i++) {
-            items.push(this.row(i));
-        }
-
-        return items;
+        return this.items;
     }
 }

@@ -1,8 +1,11 @@
 import { Column, Resource, Type } from "../decorator/resource";
+import { Index } from "../decorator";
 
 @Resource
 export class Subunit {
+    @Index
     public readonly source: string;
+
     public readonly name: string;
 
     @Type("int")
