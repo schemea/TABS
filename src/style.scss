@@ -1,3 +1,17 @@
+*::-webkit-scrollbar {
+  width: 2px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cccb;
+  border-radius: 2px;
+  border: none;
+}
+
 body {
   font-family: Roboto, sans-serif;
   background-color: rgb(20, 20, 28);
