@@ -22,6 +22,7 @@ import { Popin, usePopin } from "./popin";
 import { Subunit } from "../resource/subunit";
 import { Ability } from "../resource/ability";
 import { AbilityView } from "./ability";
+import classNames from "classnames";
 
 type SortOption = Columns.faction | Columns.name | Stat
 
@@ -86,7 +87,8 @@ enum Columns {
     offWeapon  = "offWeapon",
     ability    = "ability",
     rating     = "rating",
-    comments   = "comments"
+    pros       = "pros",
+    cons       = "cons"
 }
 
 enum Stat {
@@ -106,7 +108,8 @@ const Headers: Record<Columns, string> = {
     [Columns.offWeapon]: "Off Weapon",
     [Columns.ability]: "Ability",
     [Columns.rating]: "Rating",
-    [Columns.comments]: "Comments",
+    [Columns.pros]: "Pros",
+    [Columns.cons]: "Cons",
 };
 
 const chipTheme = createTheme({
@@ -270,7 +273,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
 
         if (subunits.filter(value => !!value).length === 0) {
             return (
-                <TableCell className="unit-stat" key={ key }
+                <TableCell className={ classNames("unit-stat", column) } key={ key }
                            onMouseEnter={ showWeapon(unit[key]) }
                            onMouseLeave={ showWeapon(undefined) }
                 >
@@ -283,7 +286,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
         }
 
         return (
-            <TableCell className="unit-stat" key={ key }
+            <TableCell className={ classNames("unit-stat", column) } key={ key }
             >
                 <div className="subunit-weapons">
                     { subunits.map(weapon => (
@@ -302,12 +305,12 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
 
     switch (column) {
         case Columns.name:
-            return <TableCell className="unit-stat" key={ column }>{ unit[column] }</TableCell>;
+            return <TableCell className={ classNames("unit-stat", column) } key={ column }>{ unit[column] }</TableCell>;
         case Columns.cost:
-            return <TableCell className="unit-stat" key={ column }>{ unit[column].toLocaleString() }</TableCell>;
+            return <TableCell className={ classNames("unit-stat", column) } key={ column }>{ unit[column].toLocaleString() }</TableCell>;
         // case Columns.hp:
         //     return (
-        //         <TableCell className="unit-stat" key={ Columns.hp }>
+        //         <TableCell className={ classNames("unit-stat", column) } key={ Columns.hp }>
         //             <Tooltip title={ (unit.hp / unit.cost).toFixed(2) + " hp per gold" }>
         //                 <div>{ unit.hp.toLocaleString() }</div>
         //             </Tooltip>
@@ -318,7 +321,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
             return renderWeapon(column);
         case Columns.ability:
             return (
-                <TableCell className="unit-stat" key={ column }
+                <TableCell className={ classNames("unit-stat", column) } key={ column }
                            onMouseEnter={ showAbility(unit[column]) }
                            onMouseLeave={ showAbility(undefined) }
                 >
@@ -326,7 +329,7 @@ function renderColumn(unit: Unit, column: Columns, data: DataContext, popin: Pop
                 </TableCell>
             );
         default:
-            return <TableCell className="unit-stat" key={ column }>{ stat(column) }</TableCell>;
+            return <TableCell className={ classNames("unit-stat", column) } key={ column }>{ stat(column) }</TableCell>;
     }
 }
 
@@ -349,7 +352,8 @@ export function UnitList() {
         Columns.mainWeapon,
         Columns.offWeapon,
         // Columns.rating,
-        Columns.comments,
+        Columns.pros,
+        Columns.cons,
     ];
 
     const data = useDataContext();

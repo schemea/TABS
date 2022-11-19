@@ -18,9 +18,13 @@
   }
 }
 
+td.MuiTableCell-body.pros, td.MuiTableCell-body.cons {
+  max-width: 350px;
+}
+
 td.MuiTableCell-body {
-  max-width: 400px;
   text-align: justify;
+  font-size: 0.8rem;
 
   &.faction-section {
     text-align: center;

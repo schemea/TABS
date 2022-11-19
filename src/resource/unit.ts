@@ -26,9 +26,13 @@ export class Unit {
     @Type("int")
     public readonly rating: number;
 
-    public readonly comments: string;
+    @Column("pros")
+    @Column("comments")
+    public readonly pros: string;
 
-    constructor(name: string, faction: string, cost: number, hp: number, mainWeapon: string, offWeapon: string, ability: string, rating: number, comments: string) {
+    public readonly cons: string;
+
+    constructor(name: string, faction: string, cost: number, hp: number, mainWeapon: string, offWeapon: string, ability: string, rating: number, pros: string, cons: string) {
         this.name = name;
         this.faction = faction;
         this.cost = cost;
@@ -37,6 +41,7 @@ export class Unit {
         this.offWeapon = offWeapon;
         this.ability = ability;
         this.rating = rating;
-        this.comments = comments;
+        this.pros = pros;
+        this.cons = cons;
     }
 }
